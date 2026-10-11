@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cicd-fastapi
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cicd-fastapi
+  template:
+    metadata:
+      labels:
+        app: cicd-fastapi
+    spec:
+      containers:
+        - name: cicd-fastapi
+          image: vijayrangvani/cicd-fastapi:latest
+          ports:
+            - containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
