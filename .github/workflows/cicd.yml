@@ -45,3 +45,32 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/cicd-fastapi:${{ github.sha }}
             ${{ secrets.DOCKERHUB_USERNAME }}/cicd-fastapi:latest
+  
+  deploy:
+    needs: build-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create kind cluster
+        uses: helm/kind-action@v1
+
+      - name: Apply Kubernetes manifests
+        run: kubectl apply -f k8s/
+
+      - name: Deploy the new image version
+        run: |
+          kubectl set image deployment/cicd-fastapi \
+            cicd-fastapi=${{ secrets.DOCKERHUB_USERNAME }}/cicd-fastapi:${{ github.sha }}
+
+      - name: Wait for rollout
+        run: kubectl rollout status deployment/cicd-fastapi --timeout=120s
+
+      - name: Verify deployment
+        run: |
+          kubectl get pods -o wide
+          kubectl port-forward service/cicd-fastapi 8080:80 &
+          sleep 5
+          curl -f http://localhost:8080/health
