@@ -73,4 +73,6 @@ jobs:
           kubectl get pods -o wide
           kubectl port-forward service/cicd-fastapi 8080:80 &
           sleep 5
-          curl -f http://localhost:8080/health
+          echo "Health check response:"
+          curl -sf http://localhost:8080/health
+          echo ""
